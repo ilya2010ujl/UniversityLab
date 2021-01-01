@@ -1,0 +1,6 @@
+<RCC>
+    <qresource prefix="/ModelToDraw">
+        <file>FragmentShader.frag</file>
+        <file>VertexShader.vert</file>
+    </qresource>
+</RCC>

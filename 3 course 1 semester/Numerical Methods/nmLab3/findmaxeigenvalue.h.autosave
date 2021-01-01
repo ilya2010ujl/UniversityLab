@@ -1,0 +1,12 @@
+#ifndef FINDMAXEIGENVALUE_H
+#define FINDMAXEIGENVALUE_H
+
+#include <QVector>
+
+bool FindMaxEigenValue(const QVector<QVector<qreal> > &matrix,
+                       const QVector<qreal> &realEigenValue,
+                       qreal *maxEigenvalue,
+                       const QVector<qreal> &initialApproximation,
+                       const uint &numberOfIteration = 100);
+
+#endif // FINDMAXEIGENVALUE_H

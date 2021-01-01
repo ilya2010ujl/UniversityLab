@@ -1,0 +1,26 @@
+﻿@{
+    ViewData["Title"] = "Home Page";
+}
+@using ClassLibrary1.Entity
+@model List<ClassLibrary1.Entity.Playbook>
+
+<div class="text-center">
+    <h1 class="display-4">Your playbooks:</h1>
+</div>
+@foreach (var playbook in Model)
+{
+    <div style="background-color:mediumaquamarine;margin: 5%">
+
+        <ul>@playbook.Name</ul>
+        <ul>
+            <a href="/playbook?id=@playbook.Id">Look into</a>
+            <a href="/removePlaybook?id=@playbook.Id">Remove</a>
+        </ul>
+
+    </div>
+}
+<p>Add new playbook</p>
+<form method="post" action="/addPlaybook">
+    <input type="text" name="Name"/>
+    <button type="submit">Add</button>
+</form>

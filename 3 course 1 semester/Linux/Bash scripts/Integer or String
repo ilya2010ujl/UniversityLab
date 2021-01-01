@@ -1,0 +1,13 @@
+#!/bin/bash
+
+# echo $1 | awk '/^[[:digit:]]+$/{print 0}'
+# echo $1 | awk '!/^[[:digit:]]+$/{print 1}'
+
+regex=^[[:digit:]]+$;
+
+if [[ $1 =~ $regex ]] 
+then
+	echo 0
+else
+	echo 1
+fi

@@ -1,0 +1,14 @@
+#!/bin/bash
+
+echo $1 | sed 's/ /\n/g' | sort -id > tmpfile
+
+a=''
+
+for word in $(cat tmpfile)
+do
+	a+="$word "
+done
+
+echo $a
+
+rm tmpfile

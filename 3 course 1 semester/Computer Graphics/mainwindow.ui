@@ -1,0 +1,94 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>MainWindow</class>
+ <widget class="QMainWindow" name="MainWindow">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>700</width>
+    <height>700</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>Computer Graphics</string>
+  </property>
+  <property name="autoFillBackground">
+   <bool>false</bool>
+  </property>
+  <widget class="QWidget" name="centralwidget">
+   <layout class="QGridLayout" name="gridLayout">
+    <item row="0" column="0">
+     <widget class="Viewport" name="viewport"/>
+    </item>
+   </layout>
+  </widget>
+  <widget class="QMenuBar" name="menuBar">
+   <property name="geometry">
+    <rect>
+     <x>0</x>
+     <y>0</y>
+     <width>700</width>
+     <height>25</height>
+    </rect>
+   </property>
+   <widget class="QMenu" name="menuviewport">
+    <property name="title">
+     <string>viewport</string>
+    </property>
+    <addaction name="actionClear"/>
+    <addaction name="actioneditcolorcurrentobject"/>
+    <addaction name="actioncameratoorigin"/>
+   </widget>
+   <widget class="QMenu" name="menuadd">
+    <property name="title">
+     <string>add</string>
+    </property>
+    <addaction name="actionLine"/>
+    <addaction name="actionPoint"/>
+    <addaction name="actionload_obj"/>
+   </widget>
+   <addaction name="menuviewport"/>
+   <addaction name="menuadd"/>
+  </widget>
+  <action name="actionClear">
+   <property name="text">
+    <string>clear</string>
+   </property>
+  </action>
+  <action name="actionLine">
+   <property name="text">
+    <string>line</string>
+   </property>
+  </action>
+  <action name="actionPoint">
+   <property name="text">
+    <string>point</string>
+   </property>
+  </action>
+  <action name="actioneditcolorcurrentobject">
+   <property name="text">
+    <string>editcolorcurrentobject</string>
+   </property>
+  </action>
+  <action name="actioncameratoorigin">
+   <property name="text">
+    <string>cameratoorigin</string>
+   </property>
+  </action>
+  <action name="actionload_obj">
+   <property name="text">
+    <string>load .obj</string>
+   </property>
+  </action>
+ </widget>
+ <customwidgets>
+  <customwidget>
+   <class>Viewport</class>
+   <extends>QOpenGLWidget</extends>
+   <header>viewport.h</header>
+  </customwidget>
+ </customwidgets>
+ <resources/>
+ <connections/>
+</ui>

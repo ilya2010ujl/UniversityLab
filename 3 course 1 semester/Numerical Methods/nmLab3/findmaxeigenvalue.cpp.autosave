@@ -1,0 +1,12 @@
+#include "findmaxeigenvalue.h"
+
+
+
+bool FindMaxEigenValue(const QVector<QVector<qreal> > &matrix,
+                       const QVector<qreal> &realEigenValue,
+                       qreal *maxEigenvalue,
+                       const QVector<qreal> &initialApproximation,
+                       const uint &numberOfIteration)
+{
+
+}

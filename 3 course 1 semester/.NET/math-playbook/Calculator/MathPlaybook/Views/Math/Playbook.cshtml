@@ -1,0 +1,51 @@
+﻿@using Microsoft.AspNetCore.Http.Extensions
+@model BlockModel
+@{
+    var id = Context.Request.GetDisplayUrl().Substring(
+        Context.Request.GetDisplayUrl().IndexOf(("id="), StringComparison.Ordinal) + 3
+        );
+    var i = 0;
+    double currentValue = 0;
+}
+@{
+    ViewBag.Title = "title";
+    Layout = "_Layout";
+}
+<a href="calculatePlaybook?id=@id">Calculate all</a>
+@if (@Model.CalculatedValues.TryGetValue(-1, out currentValue))
+{
+    <p>Plybook's total calculated value: @currentValue</p>
+}
+<p>P.S. For whole playbook's value, only blocks ending with ';' calculated</p>
+<p>Playbook's blocks:</p>
+@foreach (var block in @Model.Blocks)
+{
+    <div style="background-color: #9fcdff;margin: 5%">
+        <p>@block.Expression</p>
+
+        @if (!block.Expression.Contains(";") && @Model.CalculatedValues.TryGetValue(block.Id, out currentValue))
+        {
+            <p >Calculated value : @currentValue</p>
+        }
+
+        <a href="remove?blockId=@block.Id">Remove</a>
+        @if (i > 0)
+        {
+            <a href="swap?i=@block.Id&j=@Model.Blocks[i - 1].Id">Up</a>
+        }
+        @if (i < @Model.Blocks.Count - 1)
+        {
+            <a href="swap?i=@block.Id&j=@Model.Blocks[i + 1].Id">Down</a>
+        }
+        @{
+            i++;
+        }
+    </div>
+}
+
+<p>Add new block to playbook</p>
+<form method="post" action="/addBlock">
+    <input type="text" name="Expression"/>
+    <input type="Hidden" name="PlaybookId" value="@id"/>
+    <button type="submit">Add</button>
+</form>
