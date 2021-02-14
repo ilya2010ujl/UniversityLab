@@ -4,7 +4,7 @@
 #include <QMainWindow>
 
 #include "Viewport/viewport.h"
-#include "ObjectToDraw/objecttodraw.h"
+#include "ObjectsToDraw/ObjectToDraw/objecttodraw.h"
 
 QT_BEGIN_NAMESPACE
 namespace Ui { class MainWindow; }

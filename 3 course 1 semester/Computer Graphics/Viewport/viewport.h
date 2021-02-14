@@ -4,10 +4,10 @@
 #include <QWidget>
 #include <QVector>
 #include <QOpenGLBuffer>
-#include <QOpenGLWidget>
+#include <QtOpenGLWidgets/QOpenGLWidget>
 #include <QtMath>
 
-#include "ObjectToDraw/objecttodraw.h"
+#include "ObjectsToDraw/ObjectToDraw/objecttodraw.h"
 #include "Camera/camera.h"
 
 class Viewport : public QOpenGLWidget

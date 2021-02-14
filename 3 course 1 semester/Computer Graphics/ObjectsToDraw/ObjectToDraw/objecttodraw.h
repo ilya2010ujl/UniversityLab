@@ -26,7 +26,7 @@ public:
     virtual void vertexScaling(const QVector3D &scale) {Q_UNUSED(scale)};
     virtual void reflection() {};
 
-    virtual void rotation(qreal angel){};
+    virtual void rotation(qreal angel){Q_UNUSED(angel)};
 protected:
     QColor m_color;
     QMatrix4x4 m_modelMatrix;
