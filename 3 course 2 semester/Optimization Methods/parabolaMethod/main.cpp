@@ -4,6 +4,7 @@
 bool parabolaMethod(const std::function<qreal(const qreal&)> &f,
                      const quint64& numberOfIteration,
                      const qreal& delta,
+                     const qreal& minDelta,
                      const qreal& a_u1,
                      const qreal& a_u2,
                      const qreal& a_u3,
@@ -106,25 +107,30 @@ bool parabolaMethod(const std::function<qreal(const qreal&)> &f,
             delta_minus = Ju1 - Ju2;
             delta_plus = Ju3 - Ju2;
 
-            int i = 0;
+            qreal d = delta;
 
-            while(!(delta_minus >= 0 && delta_plus >= 0 &&
-                   delta_plus + delta_minus > 0))
+            while(d > minDelta)
             {
-                u2 = u1 + i * delta;
-                ++i;
-                Ju2 = f(u2);
-                delta_minus = Ju1 - Ju2;
-                delta_plus = Ju3 - Ju2;
-
-                if(u2 > u3)
+                if(f(u2 + d) < Ju2)
                 {
-                    result = u2;
+                    u2 = u2 + d;
                 }
+                else if(f(u2 - d) < Ju2)
+                {
+                    u2 = u2 - d;
+                }
+
+                d -= minDelta;
+            }
+
+            if(d < minDelta)
+            {
+                break;
             }
         }
     }
 
+    result = u2;
     return true;
 }
 
@@ -147,7 +153,7 @@ int main()
 
     qreal result;
 
-    parabolaMethod(f, 100, 0.01, -1.5, -1, 1, result);
+    parabolaMethod(f, 100, 0.01, 0.001, -1.5, -1, 2, result);
 
     qDebug() << result << f(result);
 

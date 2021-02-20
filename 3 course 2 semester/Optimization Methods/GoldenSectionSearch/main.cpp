@@ -15,12 +15,11 @@ qreal GoldenSectionSearch(const std::function<qreal(const qreal&)> &f,
     u1 = a + alpha1 * (b-a);
     u2 = a + alpha * (b-a);
 
+    Ju1 = f(u1);
+    Ju2 = f(u2);
+
     for(quint64 i = 0; i < numberOfIteration; ++i)
     {
-
-        Ju1 = f(u1);
-        Ju2 = f(u2);
-
         if(Ju1 < Ju2)
         {
             b = u2;
@@ -58,7 +57,7 @@ qreal GoldenSectionSearch(const std::function<qreal(const qreal&)> &f,
 
 int main()
 {
-    qreal ai[] = {1,1,1,-3,1,1};
+    qreal ai[] = {1,-2,1,0,0,0};
     std::function<qreal(const qreal&)> f = [&](const qreal &x) -> qreal
     {
         qreal pow = 1, sum = 0;
