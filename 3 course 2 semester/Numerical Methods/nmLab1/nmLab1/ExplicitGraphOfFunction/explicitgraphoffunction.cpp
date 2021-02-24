@@ -3,7 +3,7 @@
 
 #include "explicitgraphoffunction.h"
 
-#define DEBUG
+// #define DEBUG
 
 ExplicitGraphOfFunction::ExplicitGraphOfFunction(const ExplicitGraphOfFunction::Function &a_y_x,
                                                  const qreal &a_step, const qreal &a_begin, const qreal &a_end)

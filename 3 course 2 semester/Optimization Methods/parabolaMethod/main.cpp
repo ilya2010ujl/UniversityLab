@@ -137,7 +137,7 @@ bool parabolaMethod(const std::function<qreal(const qreal&)> &f,
 
 int main()
 {
-    qreal ai[] = {1,1,1,-3,1,1};
+    qreal ai[] = {1,-2,1,0,0,0};
     std::function<qreal(const qreal&)> f = [&](const qreal &x) -> qreal
     {
         qreal pow = 1, sum = 0;

@@ -3,7 +3,7 @@
 #include <QDebug>
 #include <QOpenGLFunctions>
 
-#define DEBUG
+// #define DEBUG
 
 Viewport::Viewport(Camera *camera, const QColor& a_backgroundColor, QWidget *parent)
     : QOpenGLWidget(parent), m_backgroundColor(a_backgroundColor), m_camera(camera) {}

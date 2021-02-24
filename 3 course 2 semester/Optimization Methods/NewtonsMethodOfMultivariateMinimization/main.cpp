@@ -20,23 +20,6 @@ QVector<qreal> product(const QVector<qreal> &vector, const qreal& number)
     return product(number, vector);
 }
 
-QVector<qreal> product(const QVector<QVector<qreal>> &matrix, const QVector<qreal> &vector)
-{
-    quint64 size = vector.size();
-
-    QVector<qreal> result(size, 0);
-
-    for(quint64 i = 0; i < size; ++i)
-    {
-        for(quint64 j = 0; j < size; ++j)
-        {
-            result[i] += matrix[i][j] * vector[i];
-        }
-    }
-
-    return result;
-}
-
 QVector<qreal> sum(const QVector<qreal> &left, const QVector<qreal> &right)
 {
     quint64 size = left.size();
@@ -51,12 +34,46 @@ QVector<qreal> sum(const QVector<qreal> &left, const QVector<qreal> &right)
     return result;
 }
 
-// Метод Ньютона многомерной минимизации
-void SteepestDescentMethod(std::function<qreal(const QVector<qreal>&)> &f,
+QVector<qreal> product(const QVector<QVector<qreal>> &matrix, const QVector<qreal>& vector)
+{
+    quint64 size = vector.size();
+    QVector<qreal> result(size, 0);
+
+    for(quint64 i = 0; i < size; ++i)
+    {
+        for(quint64 j = 0; j < size; ++j)
+        {
+            result[i] += matrix[i][j] * vector[j];
+        }
+    }
+
+    return result;
+}
+
+QVector<qreal> product(const QVector<qreal>& vector, const QVector<QVector<qreal>> &matrix)
+{
+    quint64 size = vector.size();
+    QVector<qreal> result(size, 0);
+
+    for(quint64 i = 0; i < size; ++i)
+    {
+        for(quint64 j = 0; j < size; ++j)
+        {
+            result[i] += matrix[j][i] * vector[j];
+        }
+    }
+
+    return result;
+}
+
+// Метод нютона многомерной оптимизации
+void NewtonsMethodOfMultivariateMinimization(std::function<qreal(const QVector<qreal>&)> &f,
                         std::function<QVector<qreal>(std::function<qreal(const QVector<qreal>&)>&, const QVector<qreal>&)> &grad,
                         std::function<qreal(const QVector<qreal>&)>& norm,
-                        std::function<QVector<QVector<qreal>>(const std::function<qreal(const QVector<qreal>&)> &, const QVector<qreal>&)> &hessian,
-                        std::function<QVector<QVector<qreal>>(const QVector<QVector<qreal>> &)> &inverseMatrix,
+                        std::function<QVector<QVector<qreal>>
+                                             (std::function<qreal(const QVector<qreal>&)>&, const QVector<qreal>&)> &hessian,
+                        std::function<QVector<QVector<qreal>>
+                                             (QVector<QVector<qreal>>)> &inverseMatrix,
                         const QVector<qreal> &initialApproximation,
                         QVector<qreal> &result,
                         const qreal& epsilon,
@@ -76,10 +93,25 @@ void SteepestDescentMethod(std::function<qreal(const QVector<qreal>&)> &f,
             break;
         }
 
-        u0 = sum(u0, product(-1, product(inverseMatrix(hessian(f, u0)), g)));
+        u0 = sum(u0, product(-1, product(g, inverseMatrix(hessian(f, u0)))));
     }
 
     result = u0;
+}
+
+QVector<QVector<qreal>> createIdentityMatrix(const quint64 size)
+{
+    QVector<QVector<qreal>> result(size);
+
+    for(quint64 i = 0; i < size; ++i)
+    {
+        result[i].resize(size);
+        result[i].fill(0);
+
+        result[i][i] = 1;
+    }
+
+    return result;
 }
 
 int main()
@@ -126,48 +158,79 @@ int main()
         return qSqrt(sum);
     };
 
-    std::function<QVector<QVector<qreal>>(const std::function<qreal(const QVector<qreal>&)> &, const QVector<qreal>&)> hessian
-            = [] (const std::function<qreal(const QVector<qreal>&)> &f , const QVector<qreal>&x) -> QVector<QVector<qreal>>
+    std::function<QVector<QVector<qreal>>
+                         (std::function<qreal(const QVector<qreal>&)>&, const QVector<qreal>&)> hessian
+            = [](std::function<qreal(const QVector<qreal>&)>& f, const QVector<qreal>& x) -> QVector<QVector<qreal>>
     {
-        qreal epsilon = 0.001;
+        int size = x.size();
+        QVector<QVector<qreal>> result(size);
 
-        quint64 size = x.size();
+        qreal epsilon = 0.01;
 
         QVector<qreal> first, second, third, fourth;
 
-        QVector<QVector<qreal>> hessian(size);
-
-        for(quint64 i = 0; i < size; ++i)
+        for(int i = 0; i < size; ++i)
         {
-            hessian[i].resize(size);
-            for(quint64 j = 0; j < size; ++j)
+            result[i].resize(size);
+            for(int j = 0; j < size; ++j)
             {
-                first = second = third = fourth = x;
-
+                first = x;
                 first[i] += epsilon;
                 first[j] += epsilon;
-
+                second = x;
                 second[i] += epsilon;
                 second[j] -= epsilon;
-
+                third = x;
                 third[i] -= epsilon;
                 third[j] += epsilon;
-
+                fourth = x;
                 fourth[i] -= epsilon;
                 fourth[j] -= epsilon;
 
-                second = product(-1, second);
-                third = product(-1, third);
-
-                hessian[i][j] = (f(first) - f(second) - f(third) + f(fourth))
-                        / ( 4 * epsilon * epsilon);
+                result[i][j] = (f(first) - f(second) - f(third) + f(fourth)) / (4 * epsilon * epsilon);
             }
         }
 
-        return hessian;
+        return result;
+    };
+
+    std::function<QVector<QVector<qreal>>(QVector<QVector<qreal>>)> inverseMatrix
+            = [](QVector<QVector<qreal>> matrix) -> QVector<QVector<qreal>>
+    {
+            int size = matrix.size();
+
+            QVector<QVector<qreal>> InverseMatrix = createIdentityMatrix(size);
+
+            qreal R;
+
+            for (int i = 0; i < size; ++i)
+            {
+                R = 1 / matrix[i][i];
+                matrix[i] = product(matrix[i], R);
+                InverseMatrix[i] = product(InverseMatrix[i], R);
+
+                for(int j = i + 1; j < size; ++j)
+                {
+                    InverseMatrix[j] = sum(product(-1 * matrix[j][i], InverseMatrix[i]), InverseMatrix[j]);
+                    matrix[j] = sum(product(-1 * matrix[j][i], matrix[i]), matrix[j]);
+                }
+            }
+
+            for (int i = size - 1; i >= 0; --i)
+            {
+                for(int j = i - 1; j >= 0; --j)
+                {
+                    InverseMatrix[j] = sum(product(-1 * matrix[j][i], InverseMatrix[i]), InverseMatrix[j]);
+                    matrix[j] = sum(product(-1 * matrix[j][i], matrix[i]), matrix[j]);
+                }
+            }
+
+            return InverseMatrix;
     };
 
     QVector<qreal> result;
+
+    NewtonsMethodOfMultivariateMinimization(f, grad, norm, hessian, inverseMatrix, {5,5}, result, 0.001, 100);
 
     qDebug() << result << f(result);
 

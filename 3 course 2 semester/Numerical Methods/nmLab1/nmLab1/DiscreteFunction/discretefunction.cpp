@@ -3,7 +3,7 @@
 
 #include "discretefunction.h"
 
-#define DEBUG
+// #define DEBUG
 
 DiscreteFunction::DiscreteFunction(const QVector<QVector2D> &a_points) : m_points(a_points) {}
 

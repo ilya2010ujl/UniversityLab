@@ -34,6 +34,7 @@ QVector<qreal> sum(const QVector<qreal> &left, const QVector<qreal> &right)
     return result;
 }
 
+// метод дробления шага
 void stepCrushingMethod(std::function<qreal(const QVector<qreal>&)> &f,
                         std::function<QVector<qreal>(std::function<qreal(const QVector<qreal>&)>&, const QVector<qreal>&)> &grad,
                         std::function<qreal(const QVector<qreal>&)>& norm,

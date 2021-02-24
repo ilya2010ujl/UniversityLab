@@ -2,7 +2,7 @@
 
 #include "camera.h"
 
-#define DEBUG
+// #define DEBUG
 
 Camera::Camera(const qreal &a_width, const qreal &a_hight) : m_width(a_width), m_hight(a_hight) {}
 
