@@ -1,5 +1,6 @@
 #include <QCoreApplication>
 #include <functional>
+#include <QVector>
 
 QVector<qreal> product(const qreal& number, const QVector<qreal> &vector)
 {
@@ -65,6 +66,41 @@ QVector<qreal> product(const QVector<qreal>& vector, const QVector<QVector<qreal
     return result;
 }
 
+// Метод нютона многомерной оптимизации
+void NewtonsMethodOfMultivariateMinimization(std::function<qreal(const QVector<qreal>&)> &f,
+                        std::function<QVector<qreal>(std::function<qreal(const QVector<qreal>&)>&, const QVector<qreal>&)> &grad,
+                        std::function<qreal(const QVector<qreal>&)>& norm,
+                        std::function<QVector<QVector<qreal>>
+                                             (std::function<qreal(const QVector<qreal>&)>&, const QVector<qreal>&)> &hessian,
+                        std::function<QVector<QVector<qreal>>
+                                             (QVector<QVector<qreal>>)> &inverseMatrix,
+                        const QVector<qreal> &initialApproximation,
+                        QVector<qreal> &result,
+                        const qreal& epsilon,
+                        const quint64& numberOfIteration)
+{
+    QVector<qreal> u0 = initialApproximation;
+    QVector<qreal> g;
+
+    std::function<qreal(const qreal&)> alphaFunction;
+
+    for(quint64 i = 0; i < numberOfIteration; ++i)
+    {
+        g = grad(f, u0);
+
+        qDebug()  << g ;
+
+        if(norm(g) < epsilon)
+        {
+            break;
+        }
+
+        u0 = sum(u0, product(-1, product(g, inverseMatrix(hessian(f, u0)))));
+    }
+
+    result = u0;
+}
+
 QVector<QVector<qreal>> createIdentityMatrix(const quint64 size)
 {
     QVector<QVector<qreal>> result(size);
@@ -80,77 +116,11 @@ QVector<QVector<qreal>> createIdentityMatrix(const quint64 size)
     return result;
 }
 
-// Метод штрафных функций
-QVector<qreal> penaltyFunctionMethod(
-        const std::function<qreal(const QVector<double>&)>& f,
-        const QVector<std::function<qreal(const QVector<double>&)>>& g,
-        const std::function
-        <
-        std::function<qreal(const QVector<double>&)>
-                (QVector<std::function<qreal(const QVector<double>&)>>)
-        >& G,
-        const std::function<QVector<double>(std::function<qreal(const QVector<double>&)>,
-                                            const QVector<double>)> &minimize,
-        const QVector<qreal>& initialX,
-        const qreal& initialR,
-        const qreal& dividerR,
-        const qreal& epsilon)
-{
-    qreal r = initialR;
-    QVector<qreal> x = initialX;
-    std::function<qreal(const QVector<double>&)> toMinimize;
-    std::function<qreal(const QVector<double>&)> penalty = G(g);
-
-    while(r > epsilon)
-    {
-        toMinimize = [&](const QVector<double>& x) -> qreal
-        {
-            return f(x) + r * penalty(x);
-        };
-
-        qDebug() << x << toMinimize(x) << f(x) << penalty(x) << r;
-
-        x = minimize(toMinimize, x);
-
-        r /= dividerR;
-    }
-
-    return x;
-}
-
 int main()
 {
-    std::function<qreal(const QVector<double>&)> f = [](const QVector<double>& x) -> qreal
+    std::function<qreal(const QVector<qreal>&)> f = [](const QVector<qreal>& x) -> qreal
     {
-        return x[0] * x[0] + 6 * x[0] + x[1] * x[1] + 9 * x[1];
-    };
-
-    QVector<std::function<qreal(const QVector<double>&)>> g(2);
-    g[0] = [](const QVector<double>& x) -> qreal
-    {
-        return x[0];
-    };
-    g[1] = [](const QVector<double>& x) -> qreal
-    {
-        return x[1];
-    };
-
-    const std::function
-    <
-    std::function<qreal(const QVector<double>&)>
-            (QVector<std::function<qreal(const QVector<double>&)>>)
-    > G = [](QVector<std::function<qreal(const QVector<double>&)>> g) -> std::function<qreal(const QVector<double>&)>
-    {
-        int size = g.size();
-        return [=](const QVector<double>& x) -> qreal
-        {
-            qreal sum = 0;
-            for(int i = 0; i < size; ++i)
-            {
-                sum += 1 / g[i](x);
-            }
-            return sum;
-        };
+        return x[0] * x[0] + x[1] * x[1] + 6 * x[0] + 9 * x[1];
     };
 
     std::function<QVector<qreal>(std::function<qreal(const QVector<qreal>&)>&, const QVector<qreal>&)> grad =
@@ -260,32 +230,35 @@ int main()
             return InverseMatrix;
     };
 
-    std::function<QVector<double>(std::function<qreal(const QVector<double>&)>,
-                                  const QVector<double>)> gaussMinimize =
-            [&](std::function<qreal(const QVector<double>&)>,
-            const QVector<double> initialX) -> QVector<double>
+    QVector<qreal> result = {1, 0.5};
+
+    // NewtonsMethodOfMultivariateMinimization(f, grad, norm, hessian, inverseMatrix, {5,5}, result, 0.001, 100);
+
+    qreal r = 1;
+    qreal e = 0.01;
+    qreal divineR = 10;
+
+    std::function<qreal(const QVector<qreal>&)> penalty = [](const QVector<qreal>& x) -> qreal
     {
-        QVector<qreal> u0 = initialX;
-        QVector<qreal> g;
-
-        std::function<qreal(const qreal&)> alphaFunction;
-
-        for(quint64 i = 0; i < 100; ++i)
-        {
-            g = grad(f, u0);
-
-            if(norm(g) < 0.001)
-            {
-                break;
-            }
-
-            u0 = sum(u0, product(-1, product(g, inverseMatrix(hessian(f, u0)))));
-        }
-
-        return u0;
+        return (1 / x[0]) + (1 / x[1]);
     };
 
-    QVector<qreal> result = penaltyFunctionMethod(f, g, G, gaussMinimize, {1, 0.5}, 100, 10, 0.00001);
+    std::function<qreal(const QVector<qreal>&)> toMinimize;
+
+    // метода штрафных функций
+    while(r > e)
+    {
+        toMinimize = [=](const QVector<qreal>& x) -> qreal
+            {
+                return f(x) + r * penalty(x);
+            };
+
+        NewtonsMethodOfMultivariateMinimization(toMinimize, grad, norm, hessian, inverseMatrix, result, result, 0.001, 100);
+
+        qDebug() << result << f(result);
+
+        r /= divineR;
+    }
 
     qDebug() << result << f(result);
 
