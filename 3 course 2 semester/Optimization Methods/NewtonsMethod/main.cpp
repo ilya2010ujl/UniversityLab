@@ -56,7 +56,7 @@ int main()
         return (-f(x0 + 2 * betta) + 16 * f(x0 + betta) - 30 * f(x0) + 16 * f(x0 - betta) - f(x0 - 2 * betta)) / (12 * betta * betta);
     };
 
-    qreal result = NewtonsMethod(f, firstDeriavation, secondDeriavation, 0.01, 2, 100, 0.01);
+    qreal result = NewtonsMethod(f, firstDeriavation, secondDeriavation, 0.01, -40, 100, 0.01);
 
     qDebug() << result << f(result);
 

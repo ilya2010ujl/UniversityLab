@@ -230,7 +230,7 @@ int main()
 
     QVector<qreal> result;
 
-    NewtonsMethodOfMultivariateMinimization(f, grad, norm, hessian, inverseMatrix, {5,5}, result, 0.001, 100);
+    NewtonsMethodOfMultivariateMinimization(f, grad, norm, hessian, inverseMatrix, {-10,0.5}, result, 0.001, 100);
 
     qDebug() << result << f(result);
 

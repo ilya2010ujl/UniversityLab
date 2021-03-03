@@ -34,93 +34,53 @@ QVector<qreal> sum(const QVector<qreal> &left, const QVector<qreal> &right)
     return result;
 }
 
-QVector<qreal> product(const QVector<QVector<qreal>> &matrix, const QVector<qreal>& vector)
-{
-    quint64 size = vector.size();
-    QVector<qreal> result(size, 0);
-
-    for(quint64 i = 0; i < size; ++i)
-    {
-        for(quint64 j = 0; j < size; ++j)
-        {
-            result[i] += matrix[i][j] * vector[j];
-        }
-    }
-
-    return result;
-}
-
-QVector<qreal> product(const QVector<qreal>& vector, const QVector<QVector<qreal>> &matrix)
-{
-    quint64 size = vector.size();
-    QVector<qreal> result(size, 0);
-
-    for(quint64 i = 0; i < size; ++i)
-    {
-        for(quint64 j = 0; j < size; ++j)
-        {
-            result[i] += matrix[j][i] * vector[j];
-        }
-    }
-
-    return result;
-}
-
-// Метод нютона многомерной оптимизации
-void NewtonsMethodOfMultivariateMinimization(std::function<qreal(const QVector<qreal>&)> &f,
+// метод дробления шага
+void stepCrushingMethod(std::function<qreal(const QVector<qreal>&)> &f,
                         std::function<QVector<qreal>(std::function<qreal(const QVector<qreal>&)>&, const QVector<qreal>&)> &grad,
                         std::function<qreal(const QVector<qreal>&)>& norm,
-                        std::function<QVector<QVector<qreal>>
-                                             (std::function<qreal(const QVector<qreal>&)>&, const QVector<qreal>&)> &hessian,
-                        std::function<QVector<QVector<qreal>>
-                                             (QVector<QVector<qreal>>)> &inverseMatrix,
                         const QVector<qreal> &initialApproximation,
                         QVector<qreal> &result,
+                        const qreal& alpha,
                         const qreal& epsilon,
                         const quint64& numberOfIteration)
 {
-    QVector<qreal> u0 = initialApproximation;
-    QVector<qreal> g;
+    QVector<qreal> u0 = initialApproximation, u1;
+    qreal Ju0 = f(u0), Ju1, a = alpha;
+    QVector<qreal> g = grad(f, u0);
 
-    std::function<qreal(const qreal&)> alphaFunction;
+    // qDebug() << "stepCrushingMethod begin" << "f" << f(u0) << u0 << "grad " << g;
 
     for(quint64 i = 0; i < numberOfIteration; ++i)
     {
-        g = grad(f, u0);
-
-        qDebug()  << g ;
-
         if(norm(g) < epsilon)
         {
             break;
         }
 
-        u0 = sum(u0, product(-1, product(g, inverseMatrix(hessian(f, u0)))));
+        u1 = sum(u0, product(-a,g));
+
+        Ju1 = f(u1);
+
+        if(Ju1 < Ju0)
+        {
+            u0 = u1;
+            Ju0 = Ju1;
+            g = grad(f, u0);
+        }
+
+        // qDebug() << "stepCrushingMethod" << "f" << f(u0) << u0 << "grad " << g;
+
+        a /= 2;
     }
 
     result = u0;
-}
-
-QVector<QVector<qreal>> createIdentityMatrix(const quint64 size)
-{
-    QVector<QVector<qreal>> result(size);
-
-    for(quint64 i = 0; i < size; ++i)
-    {
-        result[i].resize(size);
-        result[i].fill(0);
-
-        result[i][i] = 1;
-    }
-
-    return result;
 }
 
 int main()
 {
     std::function<qreal(const QVector<qreal>&)> f = [](const QVector<qreal>& x) -> qreal
     {
-        return x[0] * x[0] + x[1] * x[1] + 6 * x[0] + 9 * x[1];
+        return x[0] * x[0] + 6 * x[0] + x[1] * x[1] + 9 * x[1];
     };
 
     std::function<QVector<qreal>(std::function<qreal(const QVector<qreal>&)>&, const QVector<qreal>&)> grad =
@@ -160,104 +120,34 @@ int main()
         return qSqrt(sum);
     };
 
-    std::function<QVector<QVector<qreal>>
-                         (std::function<qreal(const QVector<qreal>&)>&, const QVector<qreal>&)> hessian
-            = [](std::function<qreal(const QVector<qreal>&)>& f, const QVector<qreal>& x) -> QVector<QVector<qreal>>
-    {
-        int size = x.size();
-        QVector<QVector<qreal>> result(size);
-
-        qreal epsilon = 0.01;
-
-        QVector<qreal> first, second, third, fourth;
-
-        for(int i = 0; i < size; ++i)
-        {
-            result[i].resize(size);
-            for(int j = 0; j < size; ++j)
-            {
-                first = x;
-                first[i] += epsilon;
-                first[j] += epsilon;
-                second = x;
-                second[i] += epsilon;
-                second[j] -= epsilon;
-                third = x;
-                third[i] -= epsilon;
-                third[j] += epsilon;
-                fourth = x;
-                fourth[i] -= epsilon;
-                fourth[j] -= epsilon;
-
-                result[i][j] = (f(first) - f(second) - f(third) + f(fourth)) / (4 * epsilon * epsilon);
-            }
-        }
-
-        return result;
-    };
-
-    std::function<QVector<QVector<qreal>>(QVector<QVector<qreal>>)> inverseMatrix
-            = [](QVector<QVector<qreal>> matrix) -> QVector<QVector<qreal>>
-    {
-            int size = matrix.size();
-
-            QVector<QVector<qreal>> InverseMatrix = createIdentityMatrix(size);
-
-            qreal R;
-
-            for (int i = 0; i < size; ++i)
-            {
-                R = 1 / matrix[i][i];
-                matrix[i] = product(matrix[i], R);
-                InverseMatrix[i] = product(InverseMatrix[i], R);
-
-                for(int j = i + 1; j < size; ++j)
-                {
-                    InverseMatrix[j] = sum(product(-1 * matrix[j][i], InverseMatrix[i]), InverseMatrix[j]);
-                    matrix[j] = sum(product(-1 * matrix[j][i], matrix[i]), matrix[j]);
-                }
-            }
-
-            for (int i = size - 1; i >= 0; --i)
-            {
-                for(int j = i - 1; j >= 0; --j)
-                {
-                    InverseMatrix[j] = sum(product(-1 * matrix[j][i], InverseMatrix[i]), InverseMatrix[j]);
-                    matrix[j] = sum(product(-1 * matrix[j][i], matrix[i]), matrix[j]);
-                }
-            }
-
-            return InverseMatrix;
-    };
-
     QVector<qreal> result = {1, 0.5};
 
-    // NewtonsMethodOfMultivariateMinimization(f, grad, norm, hessian, inverseMatrix, {5,5}, result, 0.001, 100);
+    // stepCrushingMethod(f, grad, norm, {1, -1}, result, 2, 0.00001, 10000);
 
     qreal r = 1;
-    qreal e = 0.01;
-    qreal divineR = 10;
+    qreal e = 0.0001;
 
     std::function<qreal(const QVector<qreal>&)> penalty = [](const QVector<qreal>& x) -> qreal
     {
-        return (1 / x[0]) + (1 / x[1]);
+        return 1/x[0] + 1/x[1];
     };
 
-    std::function<qreal(const QVector<qreal>&)> toMinimize;
 
-    // метода штрафных функций
+    // метод штрафных функций
     while(r > e)
     {
-        toMinimize = [=](const QVector<qreal>& x) -> qreal
-            {
-                return f(x) + r * penalty(x);
-            };
+        std::function<qreal(const QVector<qreal>&)> toMinimize = [&](const QVector<qreal>& x) -> qreal
+        {
+            return f(x) + r * penalty(x);
+        };
 
-        NewtonsMethodOfMultivariateMinimization(toMinimize, grad, norm, hessian, inverseMatrix, result, result, 0.001, 100);
+        // qDebug() << "toMinimize: " << toMinimize(result) << result;
 
-        qDebug() << result << f(result);
+        stepCrushingMethod(toMinimize, grad, norm, result, result, 0.05, 0.00001, 10);
 
-        r /= divineR;
+        // qDebug() << "toMinimize adter minimize: " << toMinimize(result) << result;
+
+        r /= 10;
     }
 
     qDebug() << result << f(result);

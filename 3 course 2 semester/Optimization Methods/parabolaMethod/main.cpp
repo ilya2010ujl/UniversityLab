@@ -137,23 +137,15 @@ bool parabolaMethod(const std::function<qreal(const qreal&)> &f,
 
 int main()
 {
-    qreal ai[] = {1,-2,1,0,0,0};
+    // qreal ai[] = {1,-2,1,0,0,0};
     std::function<qreal(const qreal&)> f = [&](const qreal &x) -> qreal
     {
-        qreal pow = 1, sum = 0;
-
-        for(int i = 0; i < 6; ++i)
-        {
-            sum += ai[i]  * pow;
-            pow *= x;
-        }
-
-        return sum;
+        return qSin(x);
     };
 
     qreal result;
 
-    parabolaMethod(f, 100, 0.01, 0.001, -1.5, -1, 2, result);
+    parabolaMethod(f, 100, 0.01, 0.001, 1.8, 2, 4.3, result);
 
     qDebug() << result << f(result);
 
