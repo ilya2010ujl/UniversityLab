@@ -2,9 +2,7 @@
 
 MainWindow::MainWindow(Viewport *viewport, QWidget *parent)
     : QMainWindow(parent), m_viewport(viewport)
-//    , ui(new Ui::MainWindow)
 {
-//    ui->setupUi(this);
 
     setCentralWidget(m_viewport);
 
@@ -12,7 +10,3 @@ MainWindow::MainWindow(Viewport *viewport, QWidget *parent)
     m_viewport->setFocusPolicy(Qt::StrongFocus);
 }
 
-MainWindow::~MainWindow()
-{
-//    delete ui;
-}

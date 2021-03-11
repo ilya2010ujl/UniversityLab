@@ -23,4 +23,11 @@ QVector<QVector2D> FourthOrderRungeKuttaMethod(const std::function<qreal (const 
                                     const qreal &end,
                                     const qreal& epsilon);
 
+QVector<QVector2D> methodRungeKuttaWithDoublingAndHalvingStep3rdAnd4thOrder(const std::function<qreal (const QVector2D &)> &f,
+                                                                            const QVector2D &initialCondition,
+                                                                            const qreal &begin,
+                                                                            const qreal &end,
+                                                                            const qreal& epsilon,
+                                                                            const qreal &minStep);
+
 #endif // RUNGEKUTTAMETHOD_H
