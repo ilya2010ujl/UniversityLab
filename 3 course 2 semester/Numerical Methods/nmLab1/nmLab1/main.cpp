@@ -21,10 +21,12 @@ int main(int argc, char *argv[])
 
     ExplicitGraphOfFunction::Function exactSolution = [](const qreal &x) -> qreal
     {
-        return -x + qExp(x) - 1;
+        // return -x + qExp(x) - 1; // y(0) = 0
+        return -x + 2 * qExp(x - 1) - 1; // y(1) = 0
     };
 
     ExplicitGraphOfFunction Graph(exactSolution, 0.1, 0, 1);
+    Graph.setColor(QColorConstants::Red);
     v.addObject(&Graph);
 
     std::function<qreal(const QVector2D&)> f = [](const QVector2D& x) -> qreal
@@ -32,11 +34,12 @@ int main(int argc, char *argv[])
         return x.x() + x.y();
     };
 
-    QVector<QVector2D> R34 = methodRungeKuttaWithDoublingAndHalvingStep3rdAnd4thOrder(f, QVector2D(0,0), 0, 1, 0.2, 0.2);
+    QVector<QVector2D> R34 = rungeKuttaMethodDoublingHalvingStep(f, QVector2D(1,0), 0, 1, 0.000001, 0.000001);
 
+    qDebug() << '\n';
     for(int i = 0 ; i < R34.size(); ++i)
     {
-        qDebug() << R34[i];
+        qDebug() << R34[i] << exactSolution(R34[i].x());
     }
 
     DiscreteFunction D34(R34);

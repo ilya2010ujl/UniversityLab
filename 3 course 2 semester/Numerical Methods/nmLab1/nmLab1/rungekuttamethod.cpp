@@ -3,294 +3,133 @@
 #include <QDebug>
 #define DEBUG
 
-QVector3D SolveThirdOrderK(const std::function<qreal (const QVector2D &)> &f,
-                 const QVector2D &x, const qreal &h)
+QVector<qreal> solveK(const std::function<qreal (const QVector2D &)> &f,
+                      const QVector2D &initialPoint,
+                      const qreal &h)
 {
-    QVector3D result;
+    // К[0], K[1], К[2] для 3го порядка (110),
+    // К[0], K[1], K[3], K[4] - для 4го порядка(111)
+    QVector<qreal> K(5);
 
-    result.setX(h * f(x));
-    result.setY(h * f(x + QVector2D(h/2, result.x()/2)));
-    result.setZ(h * f(x + QVector2D(h, -result.x() + 2 * result.y())));
+    K[0] = h * f(initialPoint);
+    K[1] = h * f(initialPoint + QVector2D(h/3, K[0]/3));
+    K[2] = h * f(initialPoint + QVector2D(2 * h /3, 2 * K[1] / 3));
+    K[3] = h * f(initialPoint + QVector2D(2 * h / 3, - K[0] / 3 + K[1]));
+    K[4] = h * f(initialPoint + QVector2D(h , K[0] - K[1] + K[3]));
 
-    return result;
+    return K;
 }
 
-QVector<QVector2D> ThirdOrderRungeKuttaMethod(const std::function<qreal (const QVector2D &)> &f,
-                                    const QVector2D &initialCondition,
-                                    const qreal &begin,
-                                    const qreal &end,
-                                    const qreal& epsilon)
+QVector<QVector2D> rungeKuttaMethodDoublingHalvingStep(const std::function<qreal (const QVector2D &)> &f,
+                                                       const QVector2D &initialCondition,
+                                                       const qreal &begin,
+                                                       const qreal &end,
+                                                       const qreal &maxLocalError,
+                                                       const qreal &minStep)
 {
+    qreal h = qAbs(begin - end) / 10;
+
+    qreal distanseToEnd, distanseToEndWithStep, LocalError, endIntegration;
+
     QVector<QVector2D> result(1);
-    result[0] = initialCondition;
 
-    QVector3D K;
+    int direction;
 
-    int direction = initialCondition.x() == begin ? 1 : - 1;
-
-    qreal h = (end - begin) / 10;
-
-    int i = 1;
-
-    while(true)
+    if(begin == initialCondition.x())
     {
-        result.push_back(QVector2D());
-
-        if(qAbs((direction == 1 ? end : begin) - (result[i - 1].x() + direction * h)) < epsilon)
-        {
-            if(qAbs((direction == 1 ? end : begin) - result[i - 1].x()) >= 2 * epsilon)
-            {
-                result.push_back(QVector2D());
-
-                result[i].setX((direction == 1 ? end : begin) - direction * epsilon);
-                result[i + 1].setX(direction == 1 ? end : begin);
-
-                K = SolveThirdOrderK(f, result[i - 1], direction * h);
-                result[i].setY(result[i - 1].y() + (K.x() + 4 * K.y() + K.z()) / 6);
-
-                K = SolveThirdOrderK(f, result[i], direction * h);
-                result[i + 1].setY(result[i].y() + (K.x() + 4 * K.y() + K.z()) / 6);
-            }
-            else if(qAbs((direction == 1 ? end : begin) - result[i - 1].x()) <= 1.5 * epsilon)
-            {
-                result[i].setX(direction == 1 ? end : begin);
-
-                K = SolveThirdOrderK(f, result[i - 1], direction * h);
-                result[i].setY(result[i - 1].y() + (K.x() + 4 * K.y() + K.z()) / 6);
-            }
-            else if(1.5 * epsilon < qAbs((direction == 1 ? end : begin) - result[i - 1].x()) &&
-                    qAbs((direction == 1 ? end : begin) - result[i - 1].x()) < 2 * epsilon)
-            {
-                result.push_back(QVector2D());
-
-                result[i].setX((direction == 1 ? end : begin) - ((direction == 1 ? end : begin) - result[i-1].x()) / 2);
-                result[i + 1].setX(direction == 1 ? end : begin);
-
-                K = SolveThirdOrderK(f, result[i - 1], direction * h);
-                result[i].setY(result[i - 1].y() + (K.x() + 4 * K.y() + K.z()) / 6);
-
-                K = SolveThirdOrderK(f, result[i], direction * h);
-                result[i + 1].setY(result[i].y() + (K.x() + 4 * K.y() + K.z()) / 6);
-            }
-            break;
-        }
-        else
-        {
-            result[i].setX(result[i - 1].x() + direction * h);
-        }
-
-        K = SolveThirdOrderK(f, result[i - 1], direction * h);
-
-        result[i].setY(result[i - 1].y() + (K.x() + 4 * K.y() + K.z()) / 6);
-
-        h /= 2;
-
-        if(h < epsilon)
-        {
-            h = epsilon;
-        }
-        ++i;
+        direction = 1;
+        endIntegration = end;
+    }
+    else
+    {
+        direction = -1;
+        endIntegration = begin;
     }
 
-    return result;
-}
+    QVector<qreal> K;
 
-QVector4D SolveFourthOrderK(const std::function<qreal (const QVector2D &)> &f, const QVector2D &x, const qreal &h)
-{
-    QVector4D result;
-
-    result.setX(h * f(x));
-    result.setY(h * f(x + QVector2D(h/2, result.x()/2)));
-    result.setZ(h * f(x + QVector2D(h/2, result.y()/2)));
-    result.setW(h * f(x + QVector2D(h, result.z())));
-
-    return result;
-}
-
-QVector<QVector2D> FourthOrderRungeKuttaMethod(const std::function<qreal (const QVector2D &)> &f,
-                                               const QVector2D &initialCondition,
-                                               const qreal &begin, const qreal &end, const qreal &epsilon)
-{
-    QVector<QVector2D> result(1);
     result[0] = initialCondition;
-
-    QVector4D K;
-
-    int direction = initialCondition.x() == begin ? 1 : - 1;
-
-    qreal h = (end - begin) / 10;
 
     int i = 1;
 
     while(true)
     {
-        result.push_back(QVector2D());
+        distanseToEndWithStep = qAbs(endIntegration - (result[i - 1].x() + direction * h));
 
-        if(qAbs((direction == 1 ? end : begin) - (result[i - 1].x() + direction * h)) < epsilon)
+        if(distanseToEndWithStep < minStep)
         {
-            if(qAbs((direction == 1 ? end : begin) - result[i - 1].x()) >= 2 * epsilon)
+            distanseToEnd = qAbs(end - result[i - 1].x());
+            if(distanseToEnd >= 2 * minStep)
             {
-                result.push_back(QVector2D());
+                result.push_back(QVector2D(endIntegration - minStep, 0));
+                result.push_back(QVector2D(endIntegration, 0));
 
-                result[i].setX((direction == 1 ? end : begin) - direction * epsilon);
-                result[i + 1].setX(direction == 1 ? end : begin);
+                K = solveK(f, result[i - 1], result[i].x() - result[i - 1].x());
 
-                K = SolveFourthOrderK(f, result[i - 1], direction * h);
-                result[i].setY(result[i - 1].y() + (K.x() + 2 * K.y() + 2 * K.z() + K.w()) / 6);
+                result[i].setY(result[i - 1].y() + (K[0] + 3 * K[2]) / 4);
 
-                K = SolveFourthOrderK(f, result[i], direction * h);
-                result[i + 1].setY(result[i].y() + (K.x() + 2 * K.y() + 2 * K.z() + K.w()) / 6);
+                K = solveK(f, result[i], direction * minStep);
+
+                result[i + 1].setY(result[i].y() + (K[0] + 3 * K[2]) / 4);
             }
-            else if(qAbs((direction == 1 ? end : begin) - result[i - 1].x()) <= 1.5 * epsilon)
+            else if(distanseToEnd <= 1.5 * minStep)
             {
-                result[i].setX(direction == 1 ? end : begin);
+                result.push_back(QVector2D(endIntegration, 0));
 
-                K = SolveFourthOrderK(f, result[i - 1], direction * h);
-                result[i].setY(result[i - 1].y() + (K.x() + 2 * K.y() + 2 * K.z() + K.w()) / 6);
+                K = solveK(f, result[i - 1], (endIntegration - result[i - 1].x()));
+
+                result[i].setY(result[i - 1].y() + (K[0] + 3 * K[2]) / 4);
             }
-            else if(1.5 * epsilon < qAbs((direction == 1 ? end : begin) - result[i - 1].x()) &&
-                    qAbs((direction == 1 ? end : begin) - result[i - 1].x()) < 2 * epsilon)
+            else
             {
-                result.push_back(QVector2D());
+                result.push_back(QVector2D(result[i - 1].x() + (endIntegration - result[i - 1].x())/2, 0));
+                result.push_back(QVector2D(endIntegration, 0));
 
-                result[i].setX((direction == 1 ? end : begin) - ((direction == 1 ? end : begin) - result[i-1].x()) / 2);
-                result[i + 1].setX(direction == 1 ? end : begin);
+                K = solveK(f, result[i - 1], result[i].x() - result[i - 1].x());
 
-                K = SolveFourthOrderK(f, result[i - 1], direction * h);
-                result[i].setY(result[i - 1].y() + (K.x() + 2 * K.y() + 2 * K.z() + K.w()) / 6);
+                result[i].setY(result[i - 1].y() + (K[0] + 3 * K[2]) / 4);
 
-                K = SolveFourthOrderK(f, result[i], direction * h);
-                result[i + 1].setY(result[i].y() + (K.x() + 2 * K.y() + 2 * K.z() + K.w()) / 6);
+                K = solveK(f, result[i], result[i + 1].x() - result[i].x());
+
+                result[i + 1].setY(result[i].y() + (K[0] + 3 * K[2]) / 4);
             }
             break;
         }
         else
         {
-            result[i].setX(result[i - 1].x() + direction * h);
-        }
-
-        K = SolveFourthOrderK(f, result[i - 1], direction * h);
-
-        result[i].setY(result[i - 1].y() + (K.x() + 2 * K.y() + 2 * K.z() + K.w()) / 6);
-
-        h /= 2;
-
-        if(h < epsilon)
-        {
-            h = epsilon;
-        }
-        ++i;
-    }
-
-    return result;
-}
-
-
-QVector<QVector2D> methodRungeKuttaWithDoublingAndHalvingStep3rdAnd4thOrder(const std::function<qreal (const QVector2D &)> &f,
-                                                                            const QVector2D &initialCondition,
-                                                                            const qreal &begin,
-                                                                            const qreal &end,
-                                                                            const qreal &epsilon,
-                                                                            const qreal &minStep)
-{
-    QVector<QVector2D> result(1);
-    result[0] = initialCondition;
-
-    QVector3D K3;
-    QVector4D K4;
-
-    int direction = initialCondition.x() == begin ? 1 : - 1;
-
-    qreal h = (end - begin) / 10, en;
-
-    int i = 1;
-
-    while(true)
-    {
-        result.push_back(QVector2D());
-
-        if(qAbs((direction == 1 ? end : begin) - (result[i - 1].x() + direction * h)) < minStep)
-        {
-            if(qAbs((direction == 1 ? end : begin) - result[i - 1].x()) >= 2 * minStep)
-            {
-                result.push_back(QVector2D());
-
-                result[i].setX((direction == 1 ? end : begin) - direction * minStep);
-                result[i + 1].setX(direction == 1 ? end : begin);
-
-                K3 = SolveThirdOrderK(f, result[i - 1], direction * h);
-                result[i].setY(result[i - 1].y() + (K3.x() + 4 * K3.y() + K3.z()) / 6);
-
-                K3 = SolveThirdOrderK(f, result[i], direction * h);
-                result[i + 1].setY(result[i].y() + (K3.x() + 4 * K3.y() + K3.z()) / 6);
-            }
-            else if(qAbs((direction == 1 ? end : begin) - result[i - 1].x()) <= 1.5 * minStep)
-            {
-                result[i].setX(direction == 1 ? end : begin);
-
-                K3 = SolveThirdOrderK(f, result[i - 1], direction * h);
-                result[i].setY(result[i - 1].y() + (K3.x() + 4 * K3.y() + K3.z()) / 6);
-            }
-            else if(1.5 * minStep < qAbs((direction == 1 ? end : begin) - result[i - 1].x()) &&
-                    qAbs((direction == 1 ? end : begin) - result[i - 1].x()) < 2 * minStep)
-            {
-                result.push_back(QVector2D());
-
-                result[i].setX((direction == 1 ? end : begin) - ((direction == 1 ? end : begin) - result[i-1].x()) / 2);
-                result[i + 1].setX(direction == 1 ? end : begin);
-
-                K3 = SolveThirdOrderK(f, result[i - 1], direction * h);
-                result[i].setY(result[i - 1].y() + (K3.x() + 4 * K3.y() + K3.z()) / 6);
-
-                K3 = SolveThirdOrderK(f, result[i], direction * h);
-                result[i + 1].setY(result[i].y() + (K3.x() + 4 * K3.y() + K3.z()) / 6);
-            }
-            break;
-        }
-        else
-        {
-
             while(true)
             {
-                result[i].setX(result[i - 1].x() + direction * h);
-
-                K3 = SolveThirdOrderK(f, result[i - 1], direction * h);
-                K4 = SolveFourthOrderK(f, result[i - 1], direction * h);
-
-                en = qAbs((K4.x() + 2 * K4.y() + 2 * K4.z() + K4.w()) - (K3.x() + 4 * K3.y() + K3.z())) / 6;
-
-                if(en > epsilon)
+                if(h < minStep)
                 {
-                    h /= 2;
+                    h = minStep;
+                    K = solveK(f, result[i - 1], direction * h);
+                    result.push_back(QVector2D(result[i - 1].x() + direction * h, result[i - 1].y() + (K[0] + 3 * K[2]) / 4));
+                    break;
+                }
 
-                    if(h < minStep)
-                    {
-                        h = minStep;
-                        break;
-                    }
+                K = solveK(f, result[i - 1], direction * h);
+
+                LocalError = qAbs((result[i - 1].y() + (K[0] + 3 * K[1] + 3 * K[3] + K[4]) / 8)
+                        - (result[i - 1].y() + (K[0] + 3 * K[2]) / 4));
+
+                if(LocalError > maxLocalError)
+                {
+                    h /= 2.;
                 }
                 else
                 {
-                    if(en < epsilon / 8)
+                    result.push_back(QVector2D(result[i - 1].x() + direction * h, result[i - 1].y() + (K[0] + 3 * K[2]) / 4));
+
+                    if(LocalError < maxLocalError / 8)
                     {
-                        h *= 2;
+                        h *= 2.;
                     }
 
-                    if(h < minStep)
-                    {
-                        h = minStep;
-                    }
-
-                    while(result[i].x() + direction * h > (direction == 1 ? end : begin))
-                    {
-                        h /= 2;
-                    }
                     break;
                 }
-            }
-
-            result[i].setY(result[i - 1].y() + (K3.x() + 4 * K3.y() + K3.z()) / 6);
+            };
         }
+
         ++i;
     }
 

@@ -5,29 +5,15 @@
 #include <QVector2D>
 #include <functional>
 
-QVector3D SolveThirdOrderK(const std::function<qreal(const QVector2D&)> &f,
-                 const QVector2D& x, const qreal& h);
+QVector<qreal> solveK(const std::function<qreal(const QVector2D&)> &f,
+                      const QVector2D& initialPoint,
+                      const qreal &h);
 
-QVector<QVector2D> ThirdOrderRungeKuttaMethod(const std::function<qreal (const QVector2D &)> &f,
-                                    const QVector2D &initialCondition,
-                                    const qreal &begin,
-                                    const qreal &end,
-                                    const qreal& epsilon);
-
-QVector4D SolveFourthOrderK(const std::function<qreal(const QVector2D&)> &f,
-                 const QVector2D& x, const qreal& h);
-
-QVector<QVector2D> FourthOrderRungeKuttaMethod(const std::function<qreal (const QVector2D &)> &f,
-                                    const QVector2D &initialCondition,
-                                    const qreal &begin,
-                                    const qreal &end,
-                                    const qreal& epsilon);
-
-QVector<QVector2D> methodRungeKuttaWithDoublingAndHalvingStep3rdAnd4thOrder(const std::function<qreal (const QVector2D &)> &f,
-                                                                            const QVector2D &initialCondition,
-                                                                            const qreal &begin,
-                                                                            const qreal &end,
-                                                                            const qreal& epsilon,
-                                                                            const qreal &minStep);
+QVector<QVector2D> rungeKuttaMethodDoublingHalvingStep(const std::function<qreal(const QVector2D&)> &f,
+                                                       const QVector2D &initialCondition,
+                                                       const qreal &begin,
+                                                       const qreal &end,
+                                                       const qreal &maxLocalError,
+                                                       const qreal &minStep);
 
 #endif // RUNGEKUTTAMETHOD_H
