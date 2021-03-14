@@ -27,6 +27,10 @@ QVector<QVector2D> rungeKuttaMethodDoublingHalvingStep(const std::function<qreal
                                                        const qreal &maxLocalError,
                                                        const qreal &minStep)
 {
+#ifdef DEBUG
+    int errorReached = 0, errorNotReached = 0;
+#endif
+
     qreal h = qAbs(begin - end) / 10;
 
     qreal distanseToEnd, distanseToEndWithStep, LocalError, endIntegration;
@@ -54,6 +58,11 @@ QVector<QVector2D> rungeKuttaMethodDoublingHalvingStep(const std::function<qreal
 
     while(true)
     {
+        while(direction * (result[i - 1].x() + direction * h) > direction * endIntegration)
+        {
+            h /= 2.;
+        }
+
         distanseToEndWithStep = qAbs(endIntegration - (result[i - 1].x() + direction * h));
 
         if(distanseToEndWithStep < minStep)
@@ -61,16 +70,45 @@ QVector<QVector2D> rungeKuttaMethodDoublingHalvingStep(const std::function<qreal
             distanseToEnd = qAbs(end - result[i - 1].x());
             if(distanseToEnd >= 2 * minStep)
             {
-                result.push_back(QVector2D(endIntegration - minStep, 0));
+                result.push_back(QVector2D(endIntegration - direction * minStep, 0));
                 result.push_back(QVector2D(endIntegration, 0));
 
                 K = solveK(f, result[i - 1], result[i].x() - result[i - 1].x());
 
                 result[i].setY(result[i - 1].y() + (K[0] + 3 * K[2]) / 4);
+#ifdef DEBUG
+    LocalError = qAbs((K[0] + 3 * K[1] + 3 * K[3] + K[4]) / 8
+            - (K[0] + 3 * K[2]) / 4);
 
+    if(LocalError > maxLocalError)
+    {
+        ++errorNotReached;
+    }
+    else
+    {
+        ++errorReached;
+    }
+
+    qDebug() << result[i] << LocalError;
+#endif
                 K = solveK(f, result[i], direction * minStep);
 
                 result[i + 1].setY(result[i].y() + (K[0] + 3 * K[2]) / 4);
+#ifdef DEBUG
+    LocalError = qAbs((K[0] + 3 * K[1] + 3 * K[3] + K[4]) / 8
+            - (K[0] + 3 * K[2]) / 4);
+
+    if(LocalError > maxLocalError)
+    {
+        ++errorNotReached;
+    }
+    else
+    {
+        ++errorReached;
+    }
+
+    qDebug() << result[i + 1] << LocalError;
+#endif
             }
             else if(distanseToEnd <= 1.5 * minStep)
             {
@@ -79,6 +117,22 @@ QVector<QVector2D> rungeKuttaMethodDoublingHalvingStep(const std::function<qreal
                 K = solveK(f, result[i - 1], (endIntegration - result[i - 1].x()));
 
                 result[i].setY(result[i - 1].y() + (K[0] + 3 * K[2]) / 4);
+
+#ifdef DEBUG
+    LocalError = qAbs((K[0] + 3 * K[1] + 3 * K[3] + K[4]) / 8
+            - (K[0] + 3 * K[2]) / 4);
+
+    if(LocalError > maxLocalError)
+    {
+        ++errorNotReached;
+    }
+    else
+    {
+        ++errorReached;
+    }
+
+    qDebug() << result[i - 1] << LocalError;
+#endif
             }
             else
             {
@@ -88,10 +142,39 @@ QVector<QVector2D> rungeKuttaMethodDoublingHalvingStep(const std::function<qreal
                 K = solveK(f, result[i - 1], result[i].x() - result[i - 1].x());
 
                 result[i].setY(result[i - 1].y() + (K[0] + 3 * K[2]) / 4);
+#ifdef DEBUG
+    LocalError = qAbs((K[0] + 3 * K[1] + 3 * K[3] + K[4]) / 8
+            - (K[0] + 3 * K[2]) / 4);
 
+    if(LocalError > maxLocalError)
+    {
+        ++errorNotReached;
+    }
+    else
+    {
+        ++errorReached;
+    }
+
+    qDebug() << result[i] << LocalError;
+#endif
                 K = solveK(f, result[i], result[i + 1].x() - result[i].x());
 
                 result[i + 1].setY(result[i].y() + (K[0] + 3 * K[2]) / 4);
+#ifdef DEBUG
+    LocalError = qAbs((K[0] + 3 * K[1] + 3 * K[3] + K[4]) / 8
+            - (K[0] + 3 * K[2]) / 4);
+
+    if(LocalError > maxLocalError)
+    {
+        ++errorNotReached;
+    }
+    else
+    {
+        ++errorReached;
+    }
+
+    qDebug() << result[i + 1] << LocalError;
+#endif
             }
             break;
         }
@@ -109,8 +192,8 @@ QVector<QVector2D> rungeKuttaMethodDoublingHalvingStep(const std::function<qreal
 
                 K = solveK(f, result[i - 1], direction * h);
 
-                LocalError = qAbs((result[i - 1].y() + (K[0] + 3 * K[1] + 3 * K[3] + K[4]) / 8)
-                        - (result[i - 1].y() + (K[0] + 3 * K[2]) / 4));
+                LocalError = qAbs((K[0] + 3 * K[1] + 3 * K[3] + K[4]) / 8
+                        - (K[0] + 3 * K[2]) / 4);
 
                 if(LocalError > maxLocalError)
                 {
@@ -129,9 +212,25 @@ QVector<QVector2D> rungeKuttaMethodDoublingHalvingStep(const std::function<qreal
                 }
             };
         }
+#ifdef DEBUG
+    if(LocalError > maxLocalError)
+    {
+        ++errorNotReached;
+    }
+    else
+    {
+        ++errorReached;
+    }
 
+    qDebug() << result[i - 1] << LocalError;
+#endif
         ++i;
     }
+
+#ifdef DEBUG
+    qDebug() << "errorReached: " << errorReached;
+    qDebug() << "errorNotReached: " << errorNotReached;
+#endif
 
     return result;
 }
