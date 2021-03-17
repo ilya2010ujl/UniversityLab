@@ -21,23 +21,23 @@ int main(int argc, char *argv[])
 
     ExplicitGraphOfFunction::Function exactSolution = [](const qreal &x) -> qreal
     {
-        // return -x + qExp(x) - 1; // y(0) = 0
+        return -x + qExp(x) - 1; // y(0) = 0
         // return -x + 2 * qExp(x - 1) - 1; // y(1) = 0
         // return -x - 1; // y(-1) = 0
 
-        return 2 * qAtan(tanh((x * x - 1) / 4));
+        // return 2 * qAtan(tanh((x * x - 1) / 4));
     };
 
-    ExplicitGraphOfFunction Graph(exactSolution, 0.1, -1, 1);
+    ExplicitGraphOfFunction Graph(exactSolution, 0.1, 0, 1);
     Graph.setColor(QColorConstants::Red);
     v.addObject(&Graph);
 
     std::function<qreal(const QVector2D&)> f = [](const QVector2D& x) -> qreal
     {
-        return qCos(x.y()) * x.x();
+        return x.y() + x.x();
     };
 
-    QVector<QVector2D> R34 = rungeKuttaMethodDoublingHalvingStep(f, QVector2D(1,0), -1, 1, 0.00001, 0.00001);
+    QVector<QVector2D> R34 = rungeKuttaMethodDoublingHalvingStep(f, QVector2D(0,0), 0, 1, 0.01, 0.01);
 
     DiscreteFunction D34(R34);
     D34.setColor(QColorConstants::Green);
