@@ -9,7 +9,7 @@ void VectorSparseLineFormat::readAsVector(std::istream &is)
 
     double tmp;
 
-    for(int i = 0; i < size + 1; ++i)
+    for(int i = 0; i < size; ++i)
     {
         is >> tmp;
         if(tmp)
@@ -19,6 +19,8 @@ void VectorSparseLineFormat::readAsVector(std::istream &is)
             m_span = i;
         }
     }
+
+    ++m_span;
 }
 
 void VectorSparseLineFormat::readAsSLF(std::istream &is)
@@ -46,6 +48,8 @@ void VectorSparseLineFormat::readAsSLF(std::istream &is)
             m_span = m_JA[i];
         }
     }
+
+    ++m_span;
 }
 
 void VectorSparseLineFormat::writeAsVector(std::ostream &os)
@@ -54,7 +58,7 @@ void VectorSparseLineFormat::writeAsVector(std::ostream &os)
 
     qint64 tmpIndex;
 
-    for(quint64 i = 0; i < m_span + 1; ++i)
+    for(quint64 i = 0; i < m_span; ++i)
     {
         tmpIndex = m_JA.indexOf(i);
 
