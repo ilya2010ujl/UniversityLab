@@ -1,7 +1,7 @@
 #include "rungekuttamethod.h"
 
 #include <QDebug>
-#define DEBUG
+// #define DEBUG
 
 QVector<qreal> solveK(const std::function<qreal (const QVector2D &)> &f,
                       const QVector2D &initialPoint,
@@ -72,8 +72,10 @@ QVector<QVector2D> rungeKuttaMethodDoublingHalvingStep(const std::function<qreal
             distanseToEnd = qAbs(end - result[i - 1].x());
             if(distanseToEnd >= 2 * minStep)
             {
+#ifdef DEBUG
                 ++numberOfPointsWithMinStep;
                 numberOfPoints += 2;
+#endif
                 result.push_back(QVector2D(endIntegration - direction * minStep, 0));
                 result.push_back(QVector2D(endIntegration, 0));
 
@@ -108,7 +110,9 @@ QVector<QVector2D> rungeKuttaMethodDoublingHalvingStep(const std::function<qreal
             }
             else if(distanseToEnd <= 1.5 * minStep)
             {
+#ifdef DEBUG
                 numberOfPoints++;
+#endif
                 result.push_back(QVector2D(endIntegration, 0));
 
                 K = solveK(f, result[i - 1], (endIntegration - result[i - 1].x()));
@@ -129,7 +133,9 @@ QVector<QVector2D> rungeKuttaMethodDoublingHalvingStep(const std::function<qreal
             }
             else
             {
+#ifdef DEBUG
                 numberOfPoints += 2;
+#endif
                 result.push_back(QVector2D(result[i - 1].x() + (endIntegration - result[i - 1].x())/2, 0));
                 result.push_back(QVector2D(endIntegration, 0));
 
@@ -166,12 +172,16 @@ QVector<QVector2D> rungeKuttaMethodDoublingHalvingStep(const std::function<qreal
         }
         else
         {
-            numberOfPoints++;
+#ifdef DEBUG
+            numberOfPoints++;#
+#endif
             while(true)
             {
                 if(h < minStep)
                 {
+#ifdef DEBUG
                     numberOfPointsWithMinStep++;
+#endif
                     h = minStep;
                     K = solveK(f, result[i - 1], direction * h);
                     result.push_back(QVector2D(result[i - 1].x() + direction * h, result[i - 1].y() + (K[0] + 3 * K[2]) / 4));
