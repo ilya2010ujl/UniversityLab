@@ -57,6 +57,32 @@ void Viewport::wheelEvent(QWheelEvent *event)
     this->update();
 }
 
+void Viewport::keyPressEvent(QKeyEvent *event)
+{
+#ifdef DEBUG
+    qDebug() << "Viewport::keyPressEvent " << event << "\n\tcamera::viewMatrix:\n" << m_camera->viewMatrix();
+#endif
+
+    switch(event->key())
+    {
+    // camera
+    case Qt::Key::Key_W:
+        m_camera->transferring(QVector3D(0, -0.1, 0));
+        break;
+    case Qt::Key::Key_S:
+        m_camera->transferring(QVector3D(0, 0.1, 0));
+        break;
+    case Qt::Key::Key_A:
+        m_camera->transferring(QVector3D(0.1, 0, 0));
+        break;
+    case Qt::Key::Key_D:
+        m_camera->transferring(QVector3D(-0.1, 0, 0));
+        break;
+    }
+
+    this->update();
+}
+
 void Viewport::addObject(ObjectToDraw *objectToDraw)
 {
     m_objectsToDraw.push_back(objectToDraw);

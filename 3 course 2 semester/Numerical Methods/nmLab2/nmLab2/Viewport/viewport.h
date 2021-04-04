@@ -21,6 +21,7 @@ protected:
     void paintGL() override;
 
     void wheelEvent(QWheelEvent* event) override;
+    void keyPressEvent(QKeyEvent *event) override;
 private:
     QColor m_backgroundColor = QColorConstants::Gray;
     Camera *m_camera;
