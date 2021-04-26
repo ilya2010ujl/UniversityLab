@@ -52,13 +52,13 @@ int main(int argc, char *argv[])
     std::function<qreal(const qreal&)> y
             = [](const qreal&x) -> qreal
     {
-        return 1+2*qExp(x);
+        return (x+1)*(x+1);
     };
 
     std::function<qreal(const qreal&)> ySh
             = [](const qreal&x) -> qreal
     {
-        return 2*qExp(x);
+        return 2*(x+1);
     };
 
     ExplicitGraphOfFunction Y(y, 0.0001, 0, 1);
@@ -73,26 +73,26 @@ int main(int argc, char *argv[])
             = [](const qreal&x) -> qreal
     {
         Q_UNUSED(x);
-        return -1;
+        return x+1;
     };
     std::function<qreal(const qreal&)> q
             = [](const qreal&x) -> qreal
     {
         Q_UNUSED(x);
-        return 0;
+        return 2;
     };
     std::function<qreal(const qreal&)> f
             = [](const qreal&x) -> qreal
     {
         Q_UNUSED(x);
-        return 0;
+        return 2;
     };
     qreal begin = 0; // a
     qreal end = 1; // b
-    QPair<qreal, qreal> a(1,-1); // a1 a2
+    QPair<qreal, qreal> a(-1,0); // a1 a2
     QPair<qreal, qreal> b(1,1); // b1 b2
-    QPair<qreal, qreal> g(5,1); // g1 g2
-    int countOfSteps = 5;
+    QPair<qreal, qreal> g(-1,4); // g1 g2
+    int countOfSteps = 3;
 
     QVector<QPair<qreal, QVector2D>> r;
 
