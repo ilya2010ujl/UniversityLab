@@ -30,8 +30,8 @@ int main()
 
     qreal T = 1;
     qreal c = 5;
-    int countHorizontalSteps = 5;
-    int countVertiacalSteps = 10;
+    int countHorizontalSteps = 50;
+    int countVertiacalSteps = 100;
 
     QVector<QVector<double>> r = firstOrderPartialDifferentialEquationSolver(f,c,a,b,phi,csi,T,
                                                                              countHorizontalSteps, countVertiacalSteps);
