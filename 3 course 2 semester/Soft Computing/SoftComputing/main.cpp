@@ -134,26 +134,21 @@ void Pro4isla()
     }
 }
 
-qreal relativeHammingDistance(const QVector<qreal> &left, const QVector<qreal> &right)
+///
+
+qreal hemmingDistance(const QVector<qreal>& left,
+                      const QVector<qreal>& right)
 {
     qint32 size = left.size();
 
-    qreal dist = 0;
+    qreal res = 0;
 
     for(qint32 i = 0; i < size; ++i)
     {
-        dist += qAbs(right[i] - left[i]);
+        res += qAbs(left[i] - right[i]);
     }
 
-    return dist / size;
-}
-
-void printMatrix(const QVector<QVector<qreal>> &matrix)
-{
-    for(qint32 i = 0; i < matrix.size(); ++i)
-    {
-        qDebug() << matrix[i];
-    }
+    return res / size;
 }
 
 QVector<QVector<qreal>> dissimilarityMatrix(const QVector<QVector<qreal>> &Aabcde)
@@ -167,14 +162,14 @@ QVector<QVector<qreal>> dissimilarityMatrix(const QVector<QVector<qreal>> &Aabcd
         res[i].resize(size);
         for(qint32 j = 0; j < size; ++j)
         {
-            res[i][j] = relativeHammingDistance(Aabcde[i], Aabcde[j]);
+            res[i][j] = hemmingDistance(Aabcde[i], Aabcde[j]);
         }
     }
 
     return res;
 }
 
-QVector<QVector<qreal>> similarityRelationshipMatrix(const QVector<QVector<qreal>> &dissimilarityMatrix)
+QVector<QVector<qreal>> milarityMatrix(const QVector<QVector<qreal>> &dissimilarityMatrix)
 {
     qint32 size = dissimilarityMatrix.size();
 
@@ -192,71 +187,18 @@ QVector<QVector<qreal>> similarityRelationshipMatrix(const QVector<QVector<qreal
     return res;
 }
 
-bool isEquil(const QVector<QVector<qreal>> &left, const QVector<QVector<qreal>> &right)
+void printMatrix(const QVector<QVector<qreal>> &matrix)
 {
-    int size = left.size();
+    qint32 size = matrix.size();
 
     for(qint32 i = 0; i < size; ++i)
     {
-        for(int j = 0; j < size; ++j)
+        for(qint32 j = 0; j < size; ++j)
         {
-            if(left[i][j] != right[i][j])
-            {
-                return false;
-            }
+            std::cout << matrix[i][j] << ' ';
         }
+        std::cout << '\n';
     }
-
-    return true;
-}
-
-QVector<QVector<qreal>> trZamMaxMin(const QVector<QVector<qreal>> &matrix)
-{
-    QVector<QVector<qreal>> prev = matrix, cur = matrix, tmpMatrix = matrix;
-
-    qint32 size = matrix.size();
-
-    QVector<qreal> tmpVector(size);
-
-    for(int i = 0; i < size; ++i)
-    {
-        for(int j = 0; j < size ; ++j)
-        {
-            for(int k = 0; k < size; ++k)
-            {
-                tmpVector[k] = qMin(cur[i][k], matrix[k][j]);
-            }
-            tmpMatrix[i][j] = *std::max_element(tmpVector.begin(), tmpVector.end());
-        }
-    }
-
-    cur = tmpMatrix;
-
-    int numIt = 0;
-
-    while(!isEquil(prev, cur))
-    {
-        prev = cur;
-
-        for(int i = 0; i < size; ++i)
-        {
-            for(int j = 0; j < size ; ++j)
-            {
-                for(int k = 0; k < size; ++k)
-                {
-                    tmpVector[k] = qMin(cur[i][k], matrix[k][j]);
-                }
-                tmpMatrix[i][j] = *std::max_element(tmpVector.begin(), tmpVector.end());
-            }
-        }
-
-        cur = tmpMatrix;
-        ++numIt;
-    }
-
-    qDebug() << "trZamMaxMin numIt: " << numIt;
-
-    return prev;
 }
 
 int main(int argc, char *argv[])
@@ -273,19 +215,11 @@ int main(int argc, char *argv[])
         {0.2, 0.4, 0.6, 0.8, 0.9}
     };
 
-    QVector<QVector<qreal>> res = dissimilarityMatrix(Aabcde);
-
-    printMatrix(res);
+    printMatrix(dissimilarityMatrix(Aabcde));
     qDebug() << '\n';
+    printMatrix(milarityMatrix(dissimilarityMatrix(Aabcde)));
 
-    QVector<QVector<qreal>> res1 = similarityRelationshipMatrix(res);
 
-    printMatrix(res1);
-    qDebug() << '\n';
-
-    QVector<QVector<qreal>> res2 = trZamMaxMin(res1);
-
-    printMatrix(res2);
 
     return a.exec();
 }
