@@ -83,7 +83,7 @@ QVector<QVector<qreal>> Union(const QVector<QVector<qreal>>& left,
 QVector<QVector<qreal>> maxTcomposition(const QVector<QVector<qreal>>& left,
                                         const QVector<QVector<qreal>>& right,
                                         const std::function<qreal(const qreal&, const qreal&)> &T =
-        [](const qreal& left, const qreal& right) ->qreal
+        [](const qreal& left, const qreal& right) -> qreal
 {
     return qMin(left, right);
 })
@@ -143,7 +143,7 @@ QVector<QVector<qreal>> transitiveClosure(const QVector<QVector<qreal>>& matrix,
     {
         uMatrix = Union(uMatrix, degreeMatrix);
         prevDegreeMatrix = degreeMatrix;
-        degreeMatrix = maxTcomposition(degreeMatrix, matrix, T);
+        degreeMatrix = maxTcomposition(matrix, degreeMatrix, T);
 
         ++countOfIteration;
     }
@@ -210,6 +210,31 @@ void decompositionTheorem(const QVector<QVector<qreal>>& matrix)
     }
 }
 
+bool checktransitiveClosure(const QVector<QVector<qreal>> &transitiveClosure,
+                            const std::function<qreal(const qreal&, const qreal&)> &T =
+[](const qreal& left, const qreal& right) ->qreal
+{
+return qMin(left, right);
+})
+{
+    qint32 size = transitiveClosure.size();
+
+    QVector<QVector<qreal>> tc2 = maxTcomposition(transitiveClosure, transitiveClosure, T);
+
+    for(qint32 i = 0; i < size; ++i)
+    {
+        for(qint32 j = 0; j < size; ++j)
+        {
+            if(tc2[i][j] > transitiveClosure[i][j])
+            {
+                return false;
+            }
+        }
+    }
+
+    return true;
+}
+
 int main()
 {
     QVector<QVector<qreal>> dMatrix = dissimilariryMatrix(
@@ -235,13 +260,16 @@ int main()
     std::function<qreal(const qreal&, const qreal&)> T = [&](const qreal&left, const qreal&right) -> qreal
     {
         qreal x = left, y = right;
-        qreal a=0.8, b=-2;
+        qreal a=0.5, b=-3;
         return qMax(0., (x*y-(1-a)*(1-b)*(1-x)*(1-y))/(1+a*b*(1-x)*(1-y)));
     };
 
     QVector<QVector<qreal>> tMatrix = transitiveClosure(sMatrix, T);
     qDebug() << "transitiveClosure: ";
     printMatrix(tMatrix);
+    qDebug() << "checktransitiveClosure: " << checktransitiveClosure(tMatrix, T);
+    qDebug() << '\n';
+
     qDebug() << '\n';
 
     decompositionTheorem(tMatrix);
