@@ -137,15 +137,18 @@ QVector<QVector<qreal>> transitiveClosure(const QVector<QVector<qreal>>& matrix,
 {
     QVector<QVector<qreal>> uMatrix = matrix, degreeMatrix = maxTcomposition(matrix, matrix, T), prevDegreeMatrix = matrix;
 
+    qint32 size = matrix.size();
+
     qint32 countOfIteration = 0;
 
-    while(!isEqual(degreeMatrix, prevDegreeMatrix))
+    while(!isEqual(degreeMatrix, prevDegreeMatrix) && size)
     {
         uMatrix = Union(uMatrix, degreeMatrix);
         prevDegreeMatrix = degreeMatrix;
         degreeMatrix = maxTcomposition(matrix, degreeMatrix, T);
 
         ++countOfIteration;
+        --size;
     }
 
     qDebug() << "max degree: " << countOfIteration + 1;
@@ -212,7 +215,7 @@ void decompositionTheorem(const QVector<QVector<qreal>>& matrix)
 
 bool checktransitiveClosure(const QVector<QVector<qreal>> &transitiveClosure,
                             const std::function<qreal(const qreal&, const qreal&)> &T =
-[](const qreal& left, const qreal& right) ->qreal
+[](const qreal& left, const qreal& right) -> qreal
 {
 return qMin(left, right);
 })
@@ -260,16 +263,14 @@ int main()
     std::function<qreal(const qreal&, const qreal&)> T = [&](const qreal&left, const qreal&right) -> qreal
     {
         qreal x = left, y = right;
-        qreal a=0.5, b=-3;
-        return qMax(0., (x*y-(1-a)*(1-b)*(1-x)*(1-y))/(1+a*b*(1-x)*(1-y)));
+        qreal b=-0.5;
+        return qMax(0., (-2+2*b+(x+y)*(2-2*b)+x*y*(2*b-1))/(1+b+(x+y)*(-b)+x*y*b));
     };
 
     QVector<QVector<qreal>> tMatrix = transitiveClosure(sMatrix, T);
     qDebug() << "transitiveClosure: ";
     printMatrix(tMatrix);
     qDebug() << "checktransitiveClosure: " << checktransitiveClosure(tMatrix, T);
-    qDebug() << '\n';
-
     qDebug() << '\n';
 
     decompositionTheorem(tMatrix);
