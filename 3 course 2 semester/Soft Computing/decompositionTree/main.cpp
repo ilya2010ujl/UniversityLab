@@ -238,6 +238,139 @@ return qMin(left, right);
     return true;
 }
 
+bool isSubsets(const QVector<qint32>& set, const QVector<qint32>& subset)
+{
+    const int size = set.size();
+
+    for(int i = 0; i < size; ++i)
+    {
+        if(subset[i] > set[i])
+        {
+            return false;
+        }
+    }
+
+    return true;
+}
+
+qint32 countNotZero(const QVector<qint32> &vector)
+{
+    qint32 count = 0;
+
+    const qint32 size = vector.size();
+
+    for(qint32 i = 0; i < size; ++i)
+    {
+        if(vector[i])
+        {
+            ++count;
+        }
+    }
+
+    return count;
+}
+
+QVector<qint32> permutationToAdjacencyLevels(const QVector<QVector<qint32>>& matrix)
+{
+    const qint32 size = matrix.size();
+
+    QVector<qint32> permutation;
+
+    QVector<QVector<QPair<qint32, qint32>>> AdjacencyLevels(size);
+
+    qint32 k = 0;
+
+    bool added = false;
+
+    for(qint32 i = 0; i < size; ++i)
+    {
+        if(permutation.indexOf(i) == -1)
+        {
+            AdjacencyLevels[k].push_back(QPair<qint32, qint32>(i, countNotZero(matrix[i])));
+            for(qint32 j = 0; j < size; ++j)
+            {
+                added = false;
+
+                for(auto element : AdjacencyLevels[k])
+                {
+                    if(element.first != j
+                            && permutation.indexOf(j) == -1
+                            && AdjacencyLevels[k].indexOf(QPair<qint32, qint32>(j, countNotZero(matrix[j]))) == -1
+                            && (isSubsets(matrix[element.first], matrix[j])
+                                || isSubsets(matrix[j], matrix[element.first]))
+                            )
+                    {
+                        AdjacencyLevels[k].push_back(QPair<qint32, qint32>(j, countNotZero(matrix[j])));
+                        added = true;
+                    }
+                }
+
+                if(added)
+                {
+                    j = 0;
+                }
+            }
+
+            std::sort(AdjacencyLevels[k].begin(), AdjacencyLevels[k].end(),
+            [](const QPair<qint32, qint32> &left, const QPair<qint32, qint32>& right) ->bool
+            {
+                return left.second > right.second;
+            });
+
+            for(auto element : AdjacencyLevels[k])
+            {
+                permutation.push_back(element.first);
+            }
+
+            ++k;
+        }
+    }
+
+    return permutation;
+}
+
+QVector<QVector<qint32>> applyPermutation(const QVector<QVector<qint32>>& matrix,
+                                          const QVector<qint32> &permutation)
+{
+    const int size = matrix.size();
+
+    QVector<QVector<qint32>> PermutationMatrix(size, QVector<qint32>(size));
+
+    for(int i = 0; i < size; ++i)
+    {
+        for(int j = 0; j < size; ++j)
+        {
+            PermutationMatrix[i][j] = matrix[permutation[i]][permutation[j]];
+        }
+    }
+
+    return PermutationMatrix;
+}
+
+void decompositionTheoremAdjacencyLevels(const QVector<QVector<qreal>>& matrix)
+{
+    QVector<qreal> uValues = uniqueValues(matrix);
+
+    qint32 countValues = uValues.size();
+
+    QVector<QVector<qint32>> uMatrix;
+
+    for(qint32 i = 0; i < countValues; ++i)
+    {
+        uMatrix = unitIfGreaterOrEqual(matrix, uValues[i]);
+
+        if(uValues[i] == 0.88)
+        {
+            qDebug() << 0;
+        }
+
+        qDebug() << uValues[i];
+        qDebug() << permutationToAdjacencyLevels(uMatrix) << '\n';
+        printMatrix(applyPermutation(uMatrix,
+                                     permutationToAdjacencyLevels(uMatrix)));
+        qDebug() << '\n';
+    }
+}
 int main()
 {
     QVector<QVector<qreal>> dMatrix = dissimilariryMatrix(
@@ -264,7 +397,7 @@ int main()
     {
         qreal x = left, y = right;
         qreal b=-0.5;
-        return qMax(0., (-2+2*b+(x+y)*(2-2*b)+x*y*(2*b-1))/(1+b+(x+y)*(-b)+x*y*b));
+        return qMax(0., (-2+2*b+(x+y)*(2-2*b)+x*y*(2*b-1))/(1+b-(x+y)*b+x*y*b));
     };
 
     QVector<QVector<qreal>> tMatrix = transitiveClosure(sMatrix, T);
@@ -274,6 +407,6 @@ int main()
     qDebug() << '\n';
 
     decompositionTheorem(tMatrix);
-
+    decompositionTheoremAdjacencyLevels(tMatrix);
     return 0;
 }
